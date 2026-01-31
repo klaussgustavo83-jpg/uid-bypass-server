@@ -137,6 +137,26 @@ async def start_bot(token, name, file_path):
         client.loop.create_task(cleaner_task(wl))
         print(f"💎 {name} logged in as {client.user} ({client.user.id})")
 
+    # Retry com delay
+    for attempt in range(3):
+        try:
+            await client.start(token)
+            break
+        except discord.HTTPException as e:
+            if "429" in str(e):
+                print(f"Rate limited, tentativa {attempt + 1}/3. Aguardando 60s...")
+                await asyncio.sleep(60)
+            else:
+                raise
+
+
+    @client.event
+    async def on_ready():
+        tree.add_command(wl)
+        await tree.sync()
+        client.loop.create_task(cleaner_task(wl))
+        print(f"💎 {name} logged in as {client.user} ({client.user.id})")
+
     await client.start(token)
 
 
